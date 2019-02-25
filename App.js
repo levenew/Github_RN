@@ -6,7 +6,6 @@
  * @flow
  * @lint-ignore-every XPLATJSCOPYRIGHT1
  */
-
 import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, View} from 'react-native';
 
