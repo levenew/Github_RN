@@ -2,7 +2,7 @@
  * @format
  * @lint-ignore-every XPLATJSCOPYRIGHT1
  */
-//看看Git有效果没有
+//看看Git有效果没有aaa
 import {AppRegistry} from 'react-native';
 import AppNavigators from './js/navigator/AppNavigators';
 import {
