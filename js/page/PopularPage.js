@@ -13,7 +13,8 @@ import {
     createAppContainer
 } from 'react-navigation';
 import NavigationUtil from '../navigator/NavigationUtil';
-import {Platform, StyleSheet, Text, View} from 'react-native';
+import {Platform, StyleSheet, Text, View,Button} from 'react-native';
+import FetchDemo from "./FetchDemo";
 
 type Props = {};
 export default class PopularPage extends Component<Props> {
@@ -65,6 +66,22 @@ class PopularTab extends Component<Props> {
                         navigation: this.props.navigation
                     }, 'DetailPage');
                 }}>跳转到详情页</Text>
+
+                <Button
+                    title={'Fetch 使用'}
+                    onPress={() => {
+                    NavigationUtil.goPage({
+                        navigation: this.props.navigation
+                    }, 'FetchDemo');
+                }}/>
+
+                <Button
+                    title={'AsyncStorage 使用'}
+                    onPress={() => {
+                        NavigationUtil.goPage({
+                            navigation: this.props.navigation
+                        }, 'AsyncStorageDemo');
+                    }}/>
             </View>
         );
     }

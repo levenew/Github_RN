@@ -8,24 +8,31 @@
  */
 
 import React, {Component} from 'react';
-import {
-    createBottomTabNavigator,
-    createAppContainer
-} from 'react-navigation';
-import {Platform, StyleSheet, Text, View} from 'react-native';
-import PopularPage from "./PopularPage";
-import TrendingPage from "./TrendingPage";
-import FavoritePage from "./FavoritePage";
-import MyPage from "./MyPage";
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import Icon from 'react-native-vector-icons/Ionicons';
-import Entypo from 'react-native-vector-icons/Entypo';
+import {NavigationActions} from 'react-navigation';
+import {Platform, StyleSheet, BackHandler} from 'react-native';
 import NavigationUtil from "../navigator/NavigationUtil";
 import DynamicTabNavigator from "../navigator/DynamicTabNavigator";
-
+import actions from "../action";
+import {connect} from "react-redux";
 
 type Props = {};
-export default class HomePage extends Component<Props> {
+
+class HomePage extends Component<Props> {
+    componentDidMount(): void {
+        BackHandler.addEventListener('hardwareBackPress', this.onBackPress)
+    }
+
+    componentWillMount(): void {
+        BackHandler.removeEventListener('hardwareBackPress', this.onBackPress)
+    }
+
+    onBackPress = () => {
+        const {dispatch, nav} = this.props;
+        if (nav.routes[1].index == 0)
+            return false;
+        dispatch(NavigationActions.back());
+        return true;
+    }
 
     render() {
         NavigationUtil.navigation = this.props.navigation;
@@ -33,16 +40,9 @@ export default class HomePage extends Component<Props> {
     }
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#F5FCFF',
-    },
-    welcome: {
-        fontSize: 20,
-        textAlign: 'center',
-        margin: 10,
-    }
+const mapStateToProps = state => ({
+    nav: state.nav
 });
+
+
+export default connect(mapStateToProps)(HomePage)

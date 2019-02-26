@@ -20,7 +20,6 @@ export default class WelcomePage extends Component<Props> {
             NavigationUtil.restToHomePage({
                 navigation: this.props.navigation
             })
-
         }, 1000);
     }
 

@@ -8,6 +8,7 @@
  */
 
 import React, {Component} from 'react';
+import {connect} from 'react-redux'
 import {
     createBottomTabNavigator,
     createAppContainer
@@ -80,25 +81,27 @@ const TABS = {
 }
 
 
-export default class DynamicTabNavigator extends Component<Props> {
+class DynamicTabNavigator extends Component<Props> {
     constructor(props) {
         super(props);
         console.disableYellowBox = true;
     }
 
     _tabNavigator() {
+        if (this.Tabs)
+            return this.Tabs;
         const {PopularPage, TrendingPage, FavoritePage, MyPage} = TABS;
         const tabs = {PopularPage, TrendingPage, FavoritePage, MyPage};
         PopularPage.navigationOptions.tabBarLabel = '最热';//动态配置名称
-        return createAppContainer(createBottomTabNavigator(tabs, {
-            tabBarComponent: TabBarComponent
+        return this.Tabs = createAppContainer(createBottomTabNavigator(tabs, {
+            tabBarComponent: props => {
+                return <TabBarComponent theme={this.props.theme}{...props}/>
+            }
 
         }))
     }
 
-
     render() {
-        NavigationUtil.navigation = this.props.navigation;
         const Tab = this._tabNavigator();
         return <Tab/>
     }
@@ -114,30 +117,18 @@ class TabBarComponent extends React.Component {
     }
 
     render(): React.ReactNode {
-        const {routes, index} = this.props.navigation.state;
-        if (routes[index].params) {
-            const {theme} = routes[index].params;
-            if (theme && theme.updateTime > this.theme.updateTime) {
-                this.theme = theme
-            }
-        }
         return <BottomTabBar
             {...this.props}
-            activeTintColor={this.theme.tintColor || this.props.activeTintColor}
+            activeTintColor={this.props.theme}
         />;
     }
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#F5FCFF',
-    },
-    welcome: {
-        fontSize: 20,
-        textAlign: 'center',
-        margin: 10,
-    }
+const mapStateToProps = state => ({
+    theme: state.theme.theme,//v2
 });
+
+/**
+ * 3.连接 React 组件与 Redux store
+ */
+export default connect(mapStateToProps)(DynamicTabNavigator);
