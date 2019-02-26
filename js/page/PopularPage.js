@@ -13,10 +13,15 @@ import {
     createAppContainer
 } from 'react-navigation';
 import NavigationUtil from '../navigator/NavigationUtil';
-import {Platform, StyleSheet, Text, View,Button} from 'react-native';
+import {StyleSheet, Text, View, FlatList, RefreshControl} from 'react-native';
 import FetchDemo from "./FetchDemo";
+import {connect} from 'react-redux';
+import actions from '../action/index'
 
 type Props = {};
+const URL = 'https://api.github.com/search/repositories?q=';
+const QUERY_STR = '&sort=stars';
+const THEME_COLOR = 'red'
 export default class PopularPage extends Component<Props> {
 
     constructor(props) {
@@ -28,7 +33,7 @@ export default class PopularPage extends Component<Props> {
         const tabs = {};
         this.tabNames.forEach((item, index) => {
             tabs[`tab${index}`] = {
-                screen: PopularTab,
+                screen: PopularTabPage,
                 navigationOptions: {
                     title: item
                 }
@@ -56,36 +61,83 @@ export default class PopularPage extends Component<Props> {
 }
 
 class PopularTab extends Component<Props> {
-    render() {
+
+    constructor(prpos) {
+        super(prpos)
         const {tabLabel} = this.props;
+        this.storeName = tabLabel;
+    }
+
+    componentDidMount(): void {
+        this.loadData()
+    }
+
+    loadData() {
+        const {onLoadPopularData} = this.props;
+        const url = this.getFetchUrl(this.storeName)
+        onLoadPopularData(this.storeName, url)
+    }
+
+    getFetchUrl(key) {
+        return URL + key + QUERY_STR;
+    }
+
+    renderItem(data) {
+        const item = data.item
+        return (
+            <View style={{marginBottom: 10}}>
+                <Text style={{backgroundColor: '#faa'}}>
+                    {JSON.stringify(item)}
+
+                </Text>
+
+            </View>
+        )
+    }
+
+
+
+    render() {
+        const {popular} = this.props;
+        let store = popular[this.storeName];
+        if (!store) {
+            store = {
+                items: [],
+                isLoading: false,
+            }
+        }
         return (
             <View style={styles.container}>
-                <Text style={styles.welcome}>{tabLabel}</Text>
-                <Text onPress={() => {
-                    NavigationUtil.goPage({
-                        navigation: this.props.navigation
-                    }, 'DetailPage');
-                }}>跳转到详情页</Text>
-
-                <Button
-                    title={'Fetch 使用'}
-                    onPress={() => {
-                    NavigationUtil.goPage({
-                        navigation: this.props.navigation
-                    }, 'FetchDemo');
-                }}/>
-
-                <Button
-                    title={'AsyncStorage 使用'}
-                    onPress={() => {
-                        NavigationUtil.goPage({
-                            navigation: this.props.navigation
-                        }, 'AsyncStorageDemo');
-                    }}/>
+                <FlatList
+                    data={store.items}
+                    renderItem={data => this.renderItem(data)}
+                    keyExtractor={item => "" + item.id}
+                    refreshControl={
+                        <RefreshControl
+                            title={'loading'}
+                            titleColor={THEME_COLOR}
+                            colors={[THEME_COLOR]}
+                            refreshing={store.isLoading}
+                            onRefresh={() => this.loadData()}
+                            tintColor={THEME_COLOR}
+                        />
+                    }
+                />
             </View>
         );
     }
 }
+
+
+const mapStateToProps = state => ({
+    popular: state.popular
+});
+const mapDispatchToProps = dispatch => ({
+    onLoadPopularData:(storeName, url) => dispatch(actions.onLoadPopularData(storeName, url)),
+});
+
+//注意：connect只是个function，并不应定非要放在export后面
+const PopularTabPage = connect(mapStateToProps, mapDispatchToProps)(PopularTab)
 
 
 const styles = StyleSheet.create({

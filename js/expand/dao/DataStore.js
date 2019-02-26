@@ -3,30 +3,55 @@ import {AsyncStorage} from 'react-native'
 
 export default class DataStore {
 
-
     saveData(url, data, callback) {
         if (!data || !url) return;
         AsyncStorage.setItem(url, JSON.stringify(this._wrapData(data)), callback)
     }
 
-
     _wrapData(data) {
         return {data: data, timestamp: new Date().getTime()}
     }
 
-
-
-    fetchNetData(url) {
+    fechData(url) {
         return new Promise((resolve, reject) => {
-             fetch(url)
-                 .then((response)=>{
-                     if(response.ok)
-                         return response.json()
-                     throw new Error('Network response was not ok.')
-                 })
+            this.fetchLocalData(url)
+                .then((wrapData) => {
+                    if (wrapData && DataStore.checkTimestampValid(wrapData.timestamp))
+                        resolve(wrapData)
+                    else {
+                        this.fetchNetData(url).then((data) => {
+                            resolve(this._wrapData(data))
+                        }).catch((error) => {
+                            reject(error);
+                        })
+                    }
+                }).catch((error) => {
+                this.fetchNetData(url).then((data) => {
+                    resolve(this._wrapData(data))
+                }).catch((error) => {
+                    reject(error);
+                })
+            })
         })
     }
 
+    fetchNetData(url) {
+        return new Promise((resolve, reject) => {
+            fetch(url)
+                .then((response) => {
+                    if (response.ok)
+                        return response.json()
+                    throw new Error('Network response was not ok.')
+                })
+                .then((responseData) => {
+                    this.saveData(url, responseData)
+                    resolver(responseData)
+                })
+                .catch((error) => {
+                    reject(error)
+                })
+        })
+    }
 
     fetchLocalData(url) {
         return new Promise((resolve, reject) => {
@@ -38,7 +63,7 @@ export default class DataStore {
                         rejecte(e)
                         console.error(e)
                     }
-                }else{
+                } else {
                     rejecte(error)
                     console.error(error)
                 }
@@ -46,4 +71,20 @@ export default class DataStore {
         })
     }
 
+
+    /**
+     * 检查timestamp是否在有效期内
+     * @param timestamp 项目更新时间
+     * @return {boolean} true 不需要更新,false需要更新
+     */
+    static checkTimestampValid(timestamp) {
+        const currentDate = new Date();
+        const targetDate = new Date();
+        targetDate.setTime(timestamp);
+        if (currentDate.getMonth() !== targetDate.getMonth()) return false;
+        if (currentDate.getDate() !== targetDate.getDate()) return false;
+        if (currentDate.getHours() - targetDate.getHours() > 4) return false;//有效期4个小时
+        // if (currentDate.getMinutes() - targetDate.getMinutes() > 1)return false;
+        return true;
+    }
 }
